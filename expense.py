@@ -6,11 +6,16 @@ import datetime
 class Expense:
     def __init__(self, name, value, date):
         self.name = name
-        self.value = value
-        self.date = date
+        self.value = float(value)
+
+        if isinstance(date, str):
+            self.date = datetime.datetime.strptime(date, "%Y-%m-%d")
+        else:
+            self.date = date
 
 class ExpenseTracker:
     def __init__(self, csv_file = "Tracker.csv"):
+        self.csv_file = csv_file
         self.expenses = []
         self.load_from_csv()
 
@@ -18,12 +23,13 @@ class ExpenseTracker:
         with open(self.csv_file, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
 
-            writer.writerow(["Expense", "Value"])
+            writer.writerow(["Expense", "Value", "Date"])
 
             for expense in self.expenses:
                 writer.writerow([
                     expense.name,
-                    expense.value
+                   expense.value,
+                    expense.date.strftime("%Y-%m-%d")
                 ])
 
     def load_from_csv(self):
@@ -35,39 +41,42 @@ class ExpenseTracker:
 
             next(reader, None) #skips Header
 
-            self.tasks = [Expense(*row) for row in reader]
+            for row in reader:
+                name, value, date = row
+                self.expenses.append(Expense(name, value, date))
 
-    def add_expense(self, expense, value):
-        expense = Expense(expense,
-                          value)
+    def add_expense(self, expense, value, date=None):
+        if date is None:
+            date = datetime.datetime.now()
+
+        expense = Expense(expense, value, date)
         self.expenses.append(expense)
         self.save_to_csv()
-        print("Expense added")
 
     def delete_expense(self, expense_name):
-         for expense in self.expenses:
-            if expense.name.lower() == expense_name:
+        for expense in self.expenses:
+            if expense.name.lower() == expense_name.lower():
                 self.expenses.remove(expense)
                 self.save_to_csv()
-                print("expense removed succesfully")
-            else:
-                print("Expense does not exist")
+                return
+            
+        print("Expense not found")
 
     def delete_all_expenses(self):
         self.expenses.clear()
         self.save_to_csv()
-        print("All expenses removed")
 
     def search_expense(self, expense_name):
         for expense in self.expenses:
-            if self.expense.name.lower() == expense_name:
-                print(f"Expense: {expense.name}, Value: {expense.value}")
-            else:
-                print("Expense does not exist")
+            if expense.name.lower() == expense_name.lower():
+                return expense.name, expense.value
+
+        print("Expense not found")
 
     def calculate_spending(self):
         expenses_sum = 0
+        today = datetime.datetime.now()
         for expense in self.expenses:
-            expenses_sum += expense.value
-        print(f"This Months Expenses: {expense.value}")
-        self.save_to_csv()
+            if expense.date.year == today.year and expense.date.month == today.month:
+                expenses_sum += expense.value
+        return expenses_sum

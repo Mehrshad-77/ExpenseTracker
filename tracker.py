@@ -69,7 +69,7 @@ class ExpenseTracker:
     def search_expense(self, expense_name):
         for expense in self.expenses:
             if expense.name.lower() == expense_name.lower():
-                return expense.name, expense.value
+                return expense
 
     def calculate_spending(self):
         expenses_sum = 0

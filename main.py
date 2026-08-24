@@ -1,4 +1,5 @@
 #the CLI
+import datetime as dt
 from tracker import ExpenseTracker
 
 def menu():
@@ -17,8 +18,19 @@ def menu():
             except ValueError:
                 print("Invalid input. please enter a valid number for value.")
                 continue
+            
+            while True:
+                date_input = input("Date(Enter the date(YYYY-MM-DD), Enter for today): ")
+                if date_input == "":
+                    date = dt.datetime.now()
+                    break
+                try:
+                    date = dt.datetime.strptime(date_input, "%Y-%m-%d")
+                    break
+                except ValueError:
+                    print("Invalid date. Please use YYYY-MM-DD.")
 
-            et.add_expense(expense, value)
+            et.add_expense(expense, value, date)
             print("Expense was successfully added")
 
         elif answer == "2":

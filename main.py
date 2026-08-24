@@ -63,12 +63,40 @@ def menu():
             if not expenses:
                 print("No expenses to show")
             else:
-                sorted_expenses = sorted(expenses, key=lambda expense: expense.date)
+                sorted_expenses = sorted(expenses, key=lambda expense: expense.date, reverse=True)
                 for i, expense in enumerate(sorted_expenses, start=1):
                     print(f"{i}. {expense.name}    "
                           f"{expense.value}    "
                           f"{expense.date.strftime('%Y-%m-%d')}"
                           )
+            while True:
+                sort_by = input("Sort by (d:date, v:value, n:name('m' to go back to the menu)): ").lower()
+                if sort_by == "d":
+                    sorted_expenses = sorted(expenses, key=lambda expense: expense.date, reverse=True)
+                    for i, expense in enumerate(sorted_expenses, start=1):
+                        print(f"{i}. {expense.name}    "
+                            f"{expense.value}    "
+                            f"{expense.date.strftime('%Y-%m-%d')}"
+                            )
+                elif sort_by == "v":
+                    sorted_expenses = sorted(expenses, key=lambda expense: expense.value, reverse=True)
+                    for i, expense in enumerate(sorted_expenses, start=1):
+                        print(f"{i}. {expense.name}    "
+                              f"{expense.value}    "
+                              f"{expense.date.strftime('%Y-%m-%d')}"
+                              )
+                elif sort_by == "n":
+                    sorted_expenses = sorted(expenses, key=lambda expense: expense.name, reverse=False)
+                    for i, expense in enumerate(sorted_expenses, start=1):
+                        print(f"{i}. {expense.name}    "
+                              f"{expense.value}    "
+                              f"{expense.date.strftime('%Y-%m-%d')}"
+                              )
+                elif sort_by == "m":
+                    break
+                else:
+                    print("Invalid input.")
+
 
         elif answer == "5":
             print(et.calculate_spending())

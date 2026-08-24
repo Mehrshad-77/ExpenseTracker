@@ -1,5 +1,5 @@
 #the CLI
-from expense import ExpenseTracker
+from tracker import ExpenseTracker
 
 def menu():
     et = ExpenseTracker()
@@ -24,7 +24,11 @@ def menu():
             expense_name = input("Expense: ")
             check = input("Are you sure you want to delete this expense? ").upper()
             if check == "Y":
-                et.delete_expense(expense_name)
+                result = et.delete_expense(expense_name)
+                if result == None:
+                    print("Expense not found")
+                else:
+                    print(result)
             elif check == "N":
                 pass
             else:

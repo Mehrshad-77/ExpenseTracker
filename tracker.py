@@ -58,9 +58,7 @@ class ExpenseTracker:
             if expense.name.lower() == expense_name.lower():
                 self.expenses.remove(expense)
                 self.save_to_csv()
-                return
-            
-        print("Expense not found")
+                return "Expence succesfully Deleted"
 
     def delete_all_expenses(self):
         self.expenses.clear()
@@ -70,8 +68,6 @@ class ExpenseTracker:
         for expense in self.expenses:
             if expense.name.lower() == expense_name.lower():
                 return expense.name, expense.value
-
-        print("Expense not found")
 
     def calculate_spending(self):
         expenses_sum = 0

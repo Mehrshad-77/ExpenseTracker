@@ -63,7 +63,8 @@ def menu():
             if not expenses:
                 print("No expenses to show")
             else:
-                for i, expense in enumerate(expenses, start=1):
+                sorted_expenses = sorted(expenses, key=lambda expense: expense.date)
+                for i, expense in enumerate(sorted_expenses, start=1):
                     print(f"{i}. {expense.name}    "
                           f"{expense.value}    "
                           f"{expense.date.strftime('%Y-%m-%d')}"

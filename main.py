@@ -10,9 +10,15 @@ def menu():
 
         if answer == "1":
             expense = input("Expense: ")
-            value = input("Value: ")
-            et.add_expense(expense, value)
-            print("Succesfully added")
+            try:
+                value = input("Value: ")
+                et.add_expense(expense, value)
+                print("Succesfully added")
+                if value != float(value):
+                    raise ValueError
+                
+            except ValueError:
+                print("Invalid input. please enter a number for value.")
 
         elif answer == "2":
             expense_name = input("Expense: ")
@@ -20,22 +26,26 @@ def menu():
             if check == "Y":
                 et.delete_expense(expense_name)
             elif check == "N":
-                continue
+                pass
             else:
                 print("Invalid input. Please try again")
 
         elif answer == "3":
-            check = input("Are you sure you want to delete this expense? ").upper()
+            check = input("Are you sure you want to delete all expenses? ").upper()
             if check == "Y":
                 et.delete_all_expenses()
             elif check == "N":
-                continue
+                pass
             else:
                 print("Invalid input. Please try again")
 
         elif answer == "4":
             expense_name = input("Expense: ")
-            print(f"{et.search_expense(expense_name)[0]}: {et.search_expense(expense_name)[1]}$")
+            result = et.search_expense(expense_name)
+            if result == None:
+                print("Expense not found")
+            else:
+                print(f"{result[0]}: {result[1]}$")
 
         elif answer == "5":
             print(et.calculate_spending())

@@ -78,3 +78,6 @@ class ExpenseTracker:
             if expense.date.year == today.year and expense.date.month == today.month:
                 expenses_sum += expense.value
         return expenses_sum
+
+    def get_expenses(self):
+        return self.expenses

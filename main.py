@@ -6,7 +6,7 @@ def menu():
     et = ExpenseTracker()
     while True:
         print("\n====EXPENSE TRACKER====")
-        print("\n1. Add expense\n2. Delete expense\n3. Delete all expenses\n4. Search expense\n5. Calculate monthly spending\nq. Exit")
+        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate monthly spending\n6. Delete all expenses\nq. Exit")
         answer = input("> ").lower()
 
         if answer == "1":
@@ -50,6 +50,29 @@ def menu():
                     print("Invalid input. Please try again")
 
         elif answer == "3":
+            expense_name = input("Expense: ")
+            result = et.search_expense(expense_name)
+            if result is None:
+                print("Expense not found")
+            else:
+                print(f"{result.name}: {result.value}$")
+                print(f"Date: {result.date.strftime('%Y-%m-%d')}")
+
+        elif answer == "4":
+            expenses = et.get_expenses()
+            if not expenses:
+                print("No expenses to show")
+            else:
+                for i, expense in enumerate(expenses, start=1):
+                    print(f"{i}. {expense.name}    "
+                          f"{expense.value}    "
+                          f"{expense.date.strftime('%Y-%m-%d')}"
+                          )
+
+        elif answer == "5":
+            print(et.calculate_spending())
+
+        elif answer == "6":
             while True:
                 check = input("Are you sure you want to delete all expenses? ").upper()
                 if check == "Y":
@@ -60,17 +83,6 @@ def menu():
                     break
                 else:
                     print("Invalid input. Please try again")
-
-        elif answer == "4":
-            expense_name = input("Expense: ")
-            result = et.search_expense(expense_name)
-            if result is None:
-                print("Expense not found")
-            else:
-                print(f"{result[0]}: {result[1]}$")
-
-        elif answer == "5":
-            print(et.calculate_spending())
 
         elif answer == "q":
             break

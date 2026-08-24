@@ -58,7 +58,9 @@ class ExpenseTracker:
             if expense.name.lower() == expense_name.lower():
                 self.expenses.remove(expense)
                 self.save_to_csv()
-                return "Expence succesfully Deleted"
+                return True
+            
+        return False
 
     def delete_all_expenses(self):
         self.expenses.clear()

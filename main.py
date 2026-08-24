@@ -22,26 +22,31 @@ def menu():
 
         elif answer == "2":
             expense_name = input("Expense: ")
-            check = input("Are you sure you want to delete this expense? ").upper()
-            if check == "Y":
-                result = et.delete_expense(expense_name)
-                if result == None:
-                    print("Expense not found")
+            while True:
+                check = input("Are you sure you want to delete this expense? ").upper()
+                if check == "Y":
+                    result = et.delete_expense(expense_name)
+                    if result == None:
+                        print("Expense not found")
+                        break
+                    else:
+                        print(result)
+                        break
+                elif check == "N":
+                    break
                 else:
-                    print(result)
-            elif check == "N":
-                pass
-            else:
-                print("Invalid input. Please try again")
+                    print("Invalid input. Please try again")
 
         elif answer == "3":
             check = input("Are you sure you want to delete all expenses? ").upper()
-            if check == "Y":
-                et.delete_all_expenses()
-            elif check == "N":
-                pass
-            else:
-                print("Invalid input. Please try again")
+            while True:
+                if check == "Y":
+                    et.delete_all_expenses()
+                    break
+                elif check == "N":
+                    break
+                else:
+                    print("Invalid input. Please try again")
 
         elif answer == "4":
             expense_name = input("Expense: ")

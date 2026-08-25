@@ -4,8 +4,8 @@ from tracker import ExpenseTracker
 
 categories = {"F":"Food",
               "T":"Transport",
-              "Ent":"Entertainment",
-              "Edu":"Education",
+              "ENT":"Entertainment",
+              "EDU":"Education",
               "B":"Bills",
               "O":"Other"
             }
@@ -23,7 +23,7 @@ def menu():
     et = ExpenseTracker()
     while True:
         print("\n====EXPENSE TRACKER====")
-        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate monthly spending\n6. Delete all expenses\nq. Exit")
+        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate monthly spending\n6. Filter expenses\n7. Delete all expenses\nq. Exit")
         answer = input("> ").lower()
 
         if answer == "1":
@@ -65,7 +65,7 @@ def menu():
         elif answer == "2":
             expense_name = input("Expense: ")
             while True:
-                check = input("Are you sure you want to delete this expense? ").upper()
+                check = input("Are you sure you want to delete this expense?(Y/N) ").upper()
                 if check == "Y":
                     result = et.delete_expense(expense_name)
                     if result:
@@ -116,9 +116,54 @@ def menu():
         elif answer == "5":
             print(et.calculate_spending())
 
-        elif answer == "6":
+        elif answer =="6":
+            expenses = et.get_expenses()
+            filter_by = input("filter by:\n1. Category, 2. Date, m. Menu\n> ").lower()
+
+            if filter_by == "1":
+                while True:
+                    cat = input("Categories:\n F: Food\nT: Transport\nENT:Entertainment\nEDU: Education\nB: Bills\nO: Other\nM: Back\n> ").upper()
+
+                    if cat == "M":
+                        break
+
+                    if cat not in categories:
+                        print("Invalid category.")
+                        continue
+
+                    filtered = [expense
+                                for expense in expenses
+                                if expense.category == categories[cat]
+                                ]
+
+                    if not filtered:
+                        print("No expenses found.\nUse Another category")
+                        continue
+                    else:
+                        display_expenses(filtered)
+                        break
+            if filter_by == "2":
+                while True:
+                    date = input("Date(Enter the date(YYYY-MM-DD)): ")
+                    try:
+                        date = dt.datetime.strptime(date, "%Y-%m-%d")
+                        break
+                    except ValueError:
+                        print("Invalid date. Please use YYYY-MM-DD.")
+
+                filtered = [expense
+                            for expense in expenses
+                            if expense.date.date() == date.date()
+                            ]
+                
+                if not filtered:
+                    print("No expenses found.")
+                else:
+                    display_expenses(filtered)
+
+        elif answer == "7":
             while True:
-                check = input("Are you sure you want to delete all expenses? ").upper()
+                check = input("Are you sure you want to delete all expenses?(Y/N) ").upper()
                 if check == "Y":
                     et.delete_all_expenses()
                     print("Expenses were deleted successfully")

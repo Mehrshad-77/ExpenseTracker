@@ -2,11 +2,20 @@
 import datetime as dt
 from tracker import ExpenseTracker
 
+categories = {"F":"Food",
+              "T":"Transport",
+              "Ent":"Entertainment",
+              "Edu":"Education",
+              "B":"Bills",
+              "O":"Other"
+            }
+
 def display_expenses(expenses):
                 for i, expense in enumerate(expenses, start=1):
                     print(
-                        f"{i}. {expense.name}    "
-                        f"{expense.value}    "
+                        f"{i}. {expense.category}    "
+                        f"{expense.name}    "
+                        f"{expense.value}$    "
                         f"{expense.date.strftime('%Y-%m-%d')}"
                     )
 
@@ -18,7 +27,19 @@ def menu():
         answer = input("> ").lower()
 
         if answer == "1":
-            expense = input("Expense: ")
+            while True:
+                try:
+                    category = input("Categoty:\nF:Food T:Transport Ent:Entertainment Edu:Education B:Bills O:Other\n> ").upper()
+                    if category not in categories:
+                        raise ValueError
+                    category = categories[category]
+                    break
+                except ValueError:
+                    print("Category doesn't exist")
+
+            expense = input("Expense(Enter for category name): ")
+            if expense == "":
+                expense = category
             try:
                 value = float(input("Value: "))
                 if value <= 0:
@@ -38,7 +59,7 @@ def menu():
                 except ValueError:
                     print("Invalid date. Please use YYYY-MM-DD.")
 
-            et.add_expense(expense, value, date)
+            et.add_expense(category, expense, value, date)
             print("Expense was successfully added")
 
         elif answer == "2":
@@ -63,6 +84,7 @@ def menu():
             if result is None:
                 print("Expense not found")
             else:
+                print(f"Category: {result.category}")
                 print(f"{result.name}: {result.value}$")
                 print(f"Date: {result.date.strftime('%Y-%m-%d')}")
 

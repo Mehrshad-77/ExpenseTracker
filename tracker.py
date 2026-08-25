@@ -4,7 +4,8 @@ import datetime
 
 #a class for expenses
 class Expense:
-    def __init__(self, name, value, date):
+    def __init__(self,category, name, value, date):
+        self.category = category
         self.name = name
         self.value = float(value)
 
@@ -23,10 +24,11 @@ class ExpenseTracker:
         with open(self.csv_file, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
 
-            writer.writerow(["Expense", "Value", "Date"])
+            writer.writerow(["Category", "Name", "Value", "Date"])
 
             for expense in self.expenses:
                 writer.writerow([
+                    expense.category,
                     expense.name,
                    expense.value,
                     expense.date.strftime("%Y-%m-%d")
@@ -42,14 +44,14 @@ class ExpenseTracker:
             next(reader, None) #skips Header
 
             for row in reader:
-                name, value, date = row
-                self.expenses.append(Expense(name, value, date))
+                category, name, value, date = row
+                self.expenses.append(Expense(category, name, value, date))
 
-    def add_expense(self, expense, value, date=None):
+    def add_expense(self,category, name, value, date=None):
         if date is None:
             date = datetime.datetime.now()
 
-        expense = Expense(expense, value, date)
+        expense = Expense(category, name, value, date)
         self.expenses.append(expense)
         self.save_to_csv()
 

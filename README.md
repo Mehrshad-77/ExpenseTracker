@@ -1,2 +1,2 @@
 # ExpenseTracker
- project for tracking your expenses
+ Program for tracking your expenses

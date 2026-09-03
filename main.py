@@ -36,7 +36,7 @@ def menu():
     et = ExpenseTracker()
     while True:
         print("\n====EXPENSE TRACKER====")
-        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate monthly spending\n6. Filter expenses\n7. Delete all expenses\nq. Exit")
+        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate spending\n6. Filter expenses\n7. Delete all expenses\nq. Exit")
         answer = input("> ").lower()
 
         if answer == "1":
@@ -128,35 +128,54 @@ def menu():
 
         elif answer == "5":
             while True:
-                try:
-                    month = int(input("Which Month spending you looking for(1-12)? "))
-                    if month > 12 or month < 1:
-                        raise ValueError
-                    else:
-                        break
-                except ValueError:
-                    print("invalid input. Please enter a legit month")
-                    continue
-            while True:
-                year_input = input("Which Year(Enter for current year)? ")
+                filter_by = input("By(Category(C)/Month(M))/Menu(B)? ").upper()
+                if filter_by == "M":
+                    while True:
+                        try:
+                            month = int(input("Which Month spending you looking for(1-12)? "))
+                            if month > 12 or month < 1:
+                                raise ValueError
+                            else:
+                                break
+                        except ValueError:
+                            print("invalid input. Please enter a legit month")
+                            continue
+                    while True:
+                        year_input = input("Which Year(Enter for current year)? ")
 
-                if year_input == "":
-                    year = dt.datetime.now().year
+                        if year_input == "":
+                            year = dt.datetime.now().year
+                            break
+
+                        try:
+                            year = int(year_input)
+
+                            if year < 2020 or year > 2100:
+                                raise ValueError
+                            
+                            break
+
+                        except ValueError:
+                            print("Invalid input. Please Enter a legit year")
+                            continue
+
+                    print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year)}$")
                     break
+                elif filter_by == "C":
+                    while True:
+                        category = input("Categories:\n F: Food\nT: Transport\nENT:Entertainment\nEDU: Education\nB: Bills\nO: Other\nM: Back\n> ").upper()
+                        if category == "M":
+                            break
 
-                try:
-                    year = int(year_input)
+                        if category not in categories:
+                            print("Invalid category.")
+                            continue
 
-                    if year < 2020 or year > 2100:
-                        raise ValueError
-                    
+                        else:
+                            print(f"Money spent on {categories[category]}: {et.calculate_spending_category(categories[category])}$")
+                            break
+                elif filter_by == "B":
                     break
-
-                except ValueError:
-                    print("Invalid input. Please Enter a legit year")
-                    continue
-
-            print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year)}$")
 
         elif answer =="6":
             expenses = et.get_expenses()

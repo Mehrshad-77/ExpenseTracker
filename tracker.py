@@ -82,3 +82,10 @@ class ExpenseTracker:
 
     def get_expenses(self):
         return self.expenses
+
+    def calculate_spending_category(self, category):
+        expense_sum = 0
+        for expense in self.expenses:
+            if expense.category == category:
+                expense_sum += expense.value
+        return expense_sum

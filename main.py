@@ -10,6 +10,19 @@ categories = {"F":"Food",
               "O":"Other"
             }
 
+months = {"1" : "Janurary",
+          "2" : "Feburary",
+          "3" : "March",
+          "4" : "April",
+          "5" : "May",
+          "6" : "June",
+          "7" : "July",
+          "8" : "Aguest",
+          "9" : "September",
+          "10" : "October",
+          "11" : "November",
+          "12" : "December"}
+
 def display_expenses(expenses):
                 for i, expense in enumerate(expenses, start=1):
                     print(
@@ -114,7 +127,36 @@ def menu():
                         print("Invalid input.")
 
         elif answer == "5":
-            print(et.calculate_spending())
+            while True:
+                try:
+                    month = int(input("Which Month spending you looking for(1-12)? "))
+                    if month > 12 or month < 1:
+                        raise ValueError
+                    else:
+                        break
+                except ValueError:
+                    print("invalid input. Please enter a legit month")
+                    continue
+            while True:
+                year_input = input("Which Year(Enter for current year)? ")
+
+                if year_input == "":
+                    year = dt.datetime.now().year
+                    break
+
+                try:
+                    year = int(year_input)
+
+                    if year < 2020 or year > 2100:
+                        raise ValueError
+                    
+                    break
+
+                except ValueError:
+                    print("Invalid input. Please Enter a legit year")
+                    continue
+
+            print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year)}$")
 
         elif answer =="6":
             expenses = et.get_expenses()

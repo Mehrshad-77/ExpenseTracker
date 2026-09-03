@@ -73,11 +73,10 @@ class ExpenseTracker:
             if expense.name.lower() == expense_name.lower():
                 return expense
 
-    def calculate_spending(self):
+    def calculate_spending(self, month, year):
         expenses_sum = 0
-        today = datetime.datetime.now()
         for expense in self.expenses:
-            if expense.date.year == today.year and expense.date.month == today.month:
+            if expense.date.month == month and expense.date.year == year:
                 expenses_sum += expense.value
         return expenses_sum
 

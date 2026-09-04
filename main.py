@@ -53,13 +53,15 @@ def menu():
             expense = input("Expense(Enter for category name): ")
             if expense == "":
                 expense = category
-            try:
-                value = float(input("Value: "))
-                if value <= 0:
-                    raise ValueError
-            except ValueError:
-                print("Invalid input. please enter a valid number for value.")
-                continue
+            while True:
+              try:
+                  value = float(input("Value: "))
+                  if value <= 0:
+                      raise ValueError
+                  break
+              except ValueError:
+                  print("Invalid input. please enter a valid number for value.")
+                  continue
             
             while True:
                 date_input = input("Date(Enter the date(YYYY-MM-DD), Enter for today): ")

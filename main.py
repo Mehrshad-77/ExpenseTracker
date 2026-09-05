@@ -208,7 +208,7 @@ def menu():
 
                     filtered = [expense
                                 for expense in expenses
-                                if expense.category == categories[cat]
+                                if expense.category.lower().strip() == categories[cat].lower().strip()
                                 ]
 
                     if not filtered:
@@ -217,7 +217,7 @@ def menu():
                     else:
                         display_expenses(filtered)
                         break
-            if filter_by == "2":
+            elif filter_by == "2":
                 while True:
                     date = input("Date(Enter the date(YYYY-MM-DD)): ")
                     try:

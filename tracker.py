@@ -46,8 +46,12 @@ class ExpenseTracker:
             next(reader, None) #skips Header
 
             for row in reader:
-                id, category, name, value, date = row
-                self.expenses.append(Expense(id, category, name, value, date))
+                try:
+                    id, category, name, value, date = row
+                    self.expenses.append(Expense(id, category, name, value, date))
+                except ValueError:
+                    print("Rows don't match")
+                    continue
 
     def add_expense(self, category, name, value, date=None):
         if date is None:
@@ -74,7 +78,7 @@ class ExpenseTracker:
         self.save_to_csv()
 
     def search_expense(self, expense_name):
-        return [expense for expense in self.expenses if expense.name.lower() == expense_name.lower()]
+        return [expense for expense in self.expenses if expense.name.lower().strip() == expense_name.lower().strip()]
 
     def calculate_spending(self, month, year):
         expenses_sum = 0
@@ -89,6 +93,6 @@ class ExpenseTracker:
     def calculate_spending_category(self, category):
         expense_sum = 0
         for expense in self.expenses:
-            if expense.category == category:
+            if expense.category.lower().strip() == category.lower().strip():
                 expense_sum += expense.value
         return expense_sum

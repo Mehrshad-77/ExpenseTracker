@@ -1,6 +1,7 @@
 import os
 import csv
 import datetime
+from decimal import Decimal
 
 #a class for expenses
 class Expense:
@@ -8,7 +9,7 @@ class Expense:
         self.id = int(id)
         self.category = category
         self.name = name
-        self.value = float(value)
+        self.value = Decimal(str(value))
 
         if isinstance(date, str):
             try:
@@ -84,7 +85,7 @@ class ExpenseTracker:
         return [expense for expense in self.expenses if expense.name.lower().strip() == expense_name.lower().strip()]
 
     def calculate_spending(self, month, year):
-        expenses_sum = 0
+        expenses_sum = Decimal("0")
         for expense in self.expenses:
             if expense.date.month == month and expense.date.year == year:
                 expenses_sum += expense.value
@@ -94,8 +95,8 @@ class ExpenseTracker:
         return self.expenses.copy()
 
     def calculate_spending_category(self, category):
-        expense_sum = 0
+        expenses_sum = Decimal("0")
         for expense in self.expenses:
             if expense.category.lower().strip() == category.lower().strip():
-                expense_sum += expense.value
-        return expense_sum
+                expenses_sum += expense.value
+        return expenses_sum

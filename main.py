@@ -1,6 +1,7 @@
 #the CLI
 import datetime as dt
 from tracker import ExpenseTracker
+from decimal import Decimal, InvalidOperation
 
 categories = {"F":"Food",
               "T":"Transport",
@@ -29,7 +30,7 @@ def display_expenses(expenses):
                         f"{expense.id}    "
                         f"{expense.category}    "
                         f"{expense.name}    "
-                        f"{expense.value}$    "
+                        f"{expense.value:.2f}$    "
                         f"{expense.date.strftime('%Y-%m-%d')}"
                     )
 
@@ -56,11 +57,11 @@ def menu():
                 expense = category
             while True:
               try:
-                  value = float(input("Value: "))
+                  value = Decimal(input("Value: "))
                   if value <= 0:
                       raise ValueError
                   break
-              except ValueError:
+              except (InvalidOperation, ValueError):
                   print("Invalid input. please enter a valid number for value.")
                   continue
             
@@ -114,7 +115,7 @@ def menu():
                 for result in results:
                     print(f"ID: {result.id}")
                     print(f"Category: {result.category}")
-                    print(f"{result.name}: {result.value}$")
+                    print(f"{result.name}: {result.value:.2f}$")
                     print(f"Date: {result.date.strftime('%Y-%m-%d')}")
 
         elif answer == "4":
@@ -181,7 +182,7 @@ def menu():
                             print("Invalid input. Please Enter a legit year")
                             continue
 
-                    print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year)}$")
+                    print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year):.2f}$")
                     break
                 elif filter_by == "C":
                     while True:
@@ -194,7 +195,7 @@ def menu():
                             continue
 
                         else:
-                            print(f"Money spent on {categories[category]}: {et.calculate_spending_category(categories[category])}$")
+                            print(f"Money spent on {categories[category]}: {et.calculate_spending_category(categories[category]):.2f}$")
                             break
                 elif filter_by == "B":
                     break

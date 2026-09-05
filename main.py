@@ -10,14 +10,14 @@ categories = {"F":"Food",
               "O":"Other"
             }
 
-months = {"1" : "Janurary",
-          "2" : "Feburary",
+months = {"1" : "January",
+          "2" : "February",
           "3" : "March",
           "4" : "April",
           "5" : "May",
           "6" : "June",
           "7" : "July",
-          "8" : "Aguest",
+          "8" : "August",
           "9" : "September",
           "10" : "October",
           "11" : "November",
@@ -79,7 +79,16 @@ def menu():
             print("Expense was successfully added")
 
         elif answer == "2":
-            expense_id = int(input("Expense ID: "))
+            while True:
+                try:
+                    expense_id = int(input("Expense ID: "))
+                    if expense_id <= 0:
+                        raise ValueError
+                    break
+                except ValueError:
+                    print("Invalid ID. Please enter a valid ID")
+                    continue
+
             while True:
                 check = input("Are you sure you want to delete this expense?(Y/N) ").upper()
                 if check == "Y":

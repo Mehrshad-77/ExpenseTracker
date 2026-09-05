@@ -26,36 +26,38 @@ class ExpenseTracker:
         self.load_from_csv()
 
     def save_to_csv(self):
-        with open(self.csv_file, "w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-
-            writer.writerow(["ID", "Category", "Name", "Value", "Date"])
-
-            for expense in self.expenses:
-                writer.writerow([
-                    expense.id,
-                    expense.category,
-                    expense.name,
-                   expense.value,
-                    expense.date.strftime("%Y-%m-%d %H:%M:%S.%f"),
-                ])
+        try:
+            with open(self.csv_file, "w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(["ID", "Category", "Name", "Value", "Date"])
+                for expense in self.expenses:
+                    writer.writerow([
+                        expense.id,
+                        expense.category,
+                        expense.name,
+                        expense.value,
+                        expense.date.strftime("%Y-%m-%d %H:%M:%S.%f")
+                    ])
+        except OSError as e:
+            print(f"Could not save expenses to {self.csv_file}: {e}")
 
     def load_from_csv(self):
         if not os.path.exists(self.csv_file):
             return
 
-        with open(self.csv_file, "r", newline="", encoding="utf-8") as file:
-            reader = csv.reader(file)
-
-            next(reader, None) #skips Header
-
-            for row in reader:
-                try:
-                    id, category, name, value, date = row
-                    self.expenses.append(Expense(id, category, name, value, date))
-                except ValueError:
-                    print("Rows don't match")
-                    continue
+        try:
+            with open(self.csv_file, "r", newline="", encoding="utf-8") as file:
+                reader = csv.reader(file)
+                next(reader, None)  # skips Header
+                for row in reader:
+                    try:
+                        id, category, name, value, date = row
+                        self.expenses.append(Expense(id, category, name, value, date))
+                    except ValueError:
+                        print("Rows don't match")
+                        continue
+        except (OSError, UnicodeDecodeError) as e:
+            print(f"Could not read expenses from {self.csv_file}: {e}")
 
     def add_expense(self, category, name, value, date=None):
         if date is None:

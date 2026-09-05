@@ -102,3 +102,20 @@ class ExpenseTracker:
             if expense.category.lower().strip() == category.lower().strip():
                 expenses_sum += expense.value
         return expenses_sum
+
+    def edit_expense(self, expense_id, category=None, name=None, value=None, date=None):
+        for expense in self.expenses:
+            if expense.id == expense_id:
+                if category is None and name is None and value is None and date is None:
+                    return True
+                if category is not None:
+                    expense.category = category
+                if name is not None:
+                    expense.name = name
+                if value is not None:
+                    expense.value = Decimal(str(value))
+                if date is not None:
+                    expense.date = date
+                self.save_to_csv()
+                return True
+        return False

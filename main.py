@@ -38,7 +38,7 @@ def menu():
     et = ExpenseTracker()
     while True:
         print("\n====EXPENSE TRACKER====")
-        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate spending\n6. Filter expenses\n7. Delete all expenses\nq. Exit")
+        print("\n1. Add expense\n2. Delete expense\n3. Search expense\n4. Show all expenses\n5. Calculate spending\n6. Filter expenses\n7. Delete all expenses\n8. Edit expense\nq. Exit")
         answer = input("> ").lower()
 
         if answer == "1":
@@ -256,6 +256,71 @@ def menu():
                     break
                 else:
                     print("Invalid input. Please try again")
+
+        elif answer == "8":
+            while True:
+                try:
+                    expense_id = int(input("Expense ID: "))
+                    if expense_id <= 0:
+                        raise ValueError
+                    break
+                except ValueError:
+                    print("Invalid ID. Please enter a positive whole number.")
+                    continue
+
+            expenses = et.get_expenses()
+            current = next((expense for expense in expenses if expense.id == expense_id), None)
+
+            if current is None:
+                print("Expense not found")
+            else:
+                print(f"Editing ID {current.id} — Category: {current.category}, Name: {current.name}, Value: {current.value:.2f}$, Date: {current.date.strftime('%Y-%m-%d')}")
+                print("Press Enter on any field to keep its current value.")
+
+                while True:
+                    category_input = input("New Category(Enter to keep current): F:Food T:Transport ENT:Entertainment EDU:Education B:Bills O:Other\n> ").upper()
+                    if category_input == "":
+                        new_category = None
+                        break
+                    if category_input not in categories:
+                        print("Category doesn't exist")
+                        continue
+                    new_category = categories[category_input]
+                    break
+
+                new_name = input("New Name(Enter to keep current): ")
+                if new_name == "":
+                    new_name = None
+
+                while True:
+                    value_input = input("New Value(Enter to keep current): ")
+                    if value_input == "":
+                        new_value = None
+                        break
+                    try:
+                        new_value = Decimal(value_input)
+                        if new_value <= 0:
+                            raise ValueError
+                        break
+                    except (InvalidOperation, ValueError):
+                        print("Invalid input. please enter a valid number for value.")
+                        continue
+
+                while True:
+                    date_input = input("New Date(YYYY-MM-DD, Enter to keep current): ")
+                    if date_input == "":
+                        new_date = None
+                        break
+                    try:
+                        new_date = dt.datetime.strptime(date_input, "%Y-%m-%d")
+                        now = dt.datetime.now()
+                        new_date = new_date.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
+                        break
+                    except ValueError:
+                        print("Invalid date. Please use YYYY-MM-DD.")
+
+                et.edit_expense(expense_id, category=new_category, name=new_name, value=new_value, date=new_date)
+                print("Expense successfully updated.")
 
         elif answer == "q":
             break

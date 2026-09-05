@@ -4,7 +4,8 @@ import datetime
 
 #a class for expenses
 class Expense:
-    def __init__(self,category, name, value, date):
+    def __init__(self,id, category, name, value, date):
+        self.id = int(id)
         self.category = category
         self.name = name
         self.value = float(value)
@@ -24,14 +25,15 @@ class ExpenseTracker:
         with open(self.csv_file, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
 
-            writer.writerow(["Category", "Name", "Value", "Date"])
+            writer.writerow(["ID", "Category", "Name", "Value", "Date"])
 
             for expense in self.expenses:
                 writer.writerow([
+                    expense.id,
                     expense.category,
                     expense.name,
                    expense.value,
-                    expense.date.strftime("%Y-%m-%d")
+                    expense.date.strftime("%Y-%m-%d"),
                 ])
 
     def load_from_csv(self):
@@ -44,20 +46,23 @@ class ExpenseTracker:
             next(reader, None) #skips Header
 
             for row in reader:
-                category, name, value, date = row
-                self.expenses.append(Expense(category, name, value, date))
+                id, category, name, value, date = row
+                self.expenses.append(Expense(id, category, name, value, date))
 
-    def add_expense(self,category, name, value, date=None):
+    def add_expense(self, category, name, value, date=None):
         if date is None:
             date = datetime.datetime.now()
 
-        expense = Expense(category, name, value, date)
+        id = max((expense.id for expense in self.expenses), default=0)
+        id +=1
+
+        expense = Expense(id, category, name, value, date)
         self.expenses.append(expense)
         self.save_to_csv()
 
-    def delete_expense(self, expense_name):
+    def delete_expense(self, expense_id):
         for expense in self.expenses:
-            if expense.name.lower() == expense_name.lower():
+            if expense.id == expense_id:
                 self.expenses.remove(expense)
                 self.save_to_csv()
                 return True
@@ -69,9 +74,7 @@ class ExpenseTracker:
         self.save_to_csv()
 
     def search_expense(self, expense_name):
-        for expense in self.expenses:
-            if expense.name.lower() == expense_name.lower():
-                return expense
+        return [expense for expense in self.expenses if expense.name.lower() == expense_name.lower()]
 
     def calculate_spending(self, month, year):
         expenses_sum = 0

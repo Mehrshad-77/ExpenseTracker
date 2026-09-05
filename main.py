@@ -24,9 +24,10 @@ months = {"1" : "Janurary",
           "12" : "December"}
 
 def display_expenses(expenses):
-                for i, expense in enumerate(expenses, start=1):
+                for expense in expenses:
                     print(
-                        f"{i}. {expense.category}    "
+                        f"{expense.id}    "
+                        f"{expense.category}    "
                         f"{expense.name}    "
                         f"{expense.value}$    "
                         f"{expense.date.strftime('%Y-%m-%d')}"
@@ -78,11 +79,11 @@ def menu():
             print("Expense was successfully added")
 
         elif answer == "2":
-            expense_name = input("Expense: ")
+            expense_id = int(input("Expense ID: "))
             while True:
                 check = input("Are you sure you want to delete this expense?(Y/N) ").upper()
                 if check == "Y":
-                    result = et.delete_expense(expense_name)
+                    result = et.delete_expense(expense_id)
                     if result:
                         print("Expense successfully deleted.")
                     else:
@@ -95,13 +96,15 @@ def menu():
 
         elif answer == "3":
             expense_name = input("Expense: ")
-            result = et.search_expense(expense_name)
-            if result is None:
+            results = et.search_expense(expense_name)
+            if not results:
                 print("Expense not found")
             else:
-                print(f"Category: {result.category}")
-                print(f"{result.name}: {result.value}$")
-                print(f"Date: {result.date.strftime('%Y-%m-%d')}")
+                for result in results:
+                    print(f"ID: {result.id}")
+                    print(f"Category: {result.category}")
+                    print(f"{result.name}: {result.value}$")
+                    print(f"Date: {result.date.strftime('%Y-%m-%d')}")
 
         elif answer == "4":
             expenses = et.get_expenses()

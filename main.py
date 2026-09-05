@@ -71,6 +71,8 @@ def menu():
                     break
                 try:
                     date = dt.datetime.strptime(date_input, "%Y-%m-%d")
+                    now = dt.datetime.now()
+                    date = date.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
                     break
                 except ValueError:
                     print("Invalid date. Please use YYYY-MM-DD.")
@@ -138,7 +140,7 @@ def menu():
                     reverse = (asc_des == "D")
 
                     if sort_by == "d":
-                        sorted_expenses = sorted(expenses, key=lambda expense: expense.date, reverse=reverse)
+                        sorted_expenses = sorted(expenses, key=lambda expense: (expense.date, expense.id), reverse=reverse)
                     elif sort_by == "v":
                         sorted_expenses = sorted(expenses, key=lambda expense: expense.value, reverse=reverse)
                     else:

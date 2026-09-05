@@ -11,7 +11,10 @@ class Expense:
         self.value = float(value)
 
         if isinstance(date, str):
-            self.date = datetime.datetime.strptime(date, "%Y-%m-%d")
+            try:
+                self.date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                self.date = datetime.datetime.strptime(date, "%Y-%m-%d")
         else:
             self.date = date
 
@@ -33,7 +36,7 @@ class ExpenseTracker:
                     expense.category,
                     expense.name,
                    expense.value,
-                    expense.date.strftime("%Y-%m-%d"),
+                    expense.date.strftime("%Y-%m-%d %H:%M:%S.%f"),
                 ])
 
     def load_from_csv(self):

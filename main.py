@@ -122,23 +122,29 @@ def menu():
             else:
                 while True:
                     sort_by = input("Sort by (d:date, v:value, n:name('m' to go back to the menu)): ").lower()
-                    if sort_by == "d":
-                        sorted_expenses = sorted(expenses, key=lambda expense: expense.date, reverse=True)
-                        display_expenses(sorted_expenses)
 
-                    elif sort_by == "v":
-                        sorted_expenses = sorted(expenses, key=lambda expense: expense.value, reverse=True)
-                        display_expenses(sorted_expenses)
-
-                    elif sort_by == "n":
-                        sorted_expenses = sorted(expenses, key=lambda expense: expense.name.lower())
-                        display_expenses(sorted_expenses)
-
-                    elif sort_by == "m":
+                    if sort_by == "m":
                         break
 
-                    else:
+                    if sort_by not in ("d", "v", "n", "m"):
                         print("Invalid input.")
+                        continue
+
+                    asc_des = input("Ascending(A) or Descending(D)? ").upper()
+                    if asc_des not in ("A", "D"):
+                        print("Invalid Input")
+                        continue
+
+                    reverse = (asc_des == "D")
+
+                    if sort_by == "d":
+                        sorted_expenses = sorted(expenses, key=lambda expense: expense.date, reverse=reverse)
+                    elif sort_by == "v":
+                        sorted_expenses = sorted(expenses, key=lambda expense: expense.value, reverse=reverse)
+                    else:
+                        sorted_expenses = sorted(expenses, key=lambda expense: expense.name.lower(), reverse=reverse)
+
+                    display_expenses(sorted_expenses)
 
         elif answer == "5":
             while True:

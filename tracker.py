@@ -69,6 +69,7 @@ class ExpenseTracker:
         expense = Expense(id, category, name, value, date)
         self.expenses.append(expense)
         self.save_to_csv()
+        return expense
 
     def delete_expense(self, expense_id):
         for expense in self.expenses:
@@ -82,6 +83,7 @@ class ExpenseTracker:
     def delete_all_expenses(self):
         self.expenses.clear()
         self.save_to_csv()
+        return True
 
     def search_expense(self, expense_name):
         return [expense for expense in self.expenses if expense.name.lower().strip() == expense_name.lower().strip()]

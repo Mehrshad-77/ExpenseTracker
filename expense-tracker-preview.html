@@ -501,27 +501,34 @@
     Other:         { bg: 'var(--surface-sunken)', text: 'var(--ink-subtle)' }
   };
 
-  let expenses = [
-    { id: 1, category: 'Transport',     name: 'Metro pass',           value: 30.00, date: '2026-09-01' },
-    { id: 2, category: 'Food',          name: 'Grocery run',          value: 42.50, date: '2026-09-02' },
-    { id: 3, category: 'Bills',         name: 'Electricity bill',     value: 76.20, date: '2026-09-03' },
-    { id: 4, category: 'Food',          name: 'Coffee with a friend', value: 5.75,  date: '2026-09-04' },
-    { id: 5, category: 'Entertainment', name: 'Movie night',          value: 18.00, date: '2026-08-29' },
-    { id: 6, category: 'Education',     name: 'Online course',        value: 55.00, date: '2026-08-25' },
-    { id: 7, category: 'Other',         name: 'Birthday gift',        value: 20.00, date: '2026-08-30' },
-    { id: 8, category: 'Transport',     name: 'Taxi ride',            value: 14.30, date: '2026-08-27' }
-  ];
+  let expenses = [];
   let nextId = 9;
   let filterCat = 'All';
   let sortBy = 'date';
   let sortDir = 'desc';
 
+async function loadExpenses() {
+    const response = await fetch("http://127.0.0.1:8000/expenses");
+
+    const data = await response.json();
+
+    expenses = data.map(e => ({
+        ...e,
+        value: Number(e.value),
+        date: new Date(e.date)
+    }));
+}
+
   function fmtMoney(n) { return '$' + n.toFixed(2); }
 
-  function fmtDate(iso) {
-    const d = new Date(iso + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
+  function fmtDate(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
 
   function escapeHtml(s) {
     const div = document.createElement('div');
@@ -533,11 +540,9 @@
     return /^[0-9]+(\.[0-9]+)?$/.test(s) && parseFloat(s) > 0;
   }
 
-  function isValidDateStr(s) {
-    if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s)) return false;
-    const d = new Date(s + 'T00:00:00');
-    return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-  }
+  function isValidDateStr(str) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(str);
+}
 
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -554,7 +559,7 @@
     const year = parseInt(document.getElementById('yearSelect').value, 10);
     let total = 0;
     expenses.forEach(e => {
-      const d = new Date(e.date + 'T00:00:00');
+      const d = e.date instanceof Date ? e.date : new Date(e.date);
       if (d.getMonth() + 1 === month && d.getFullYear() === year) total += e.value;
     });
     document.getElementById('monthLabel').textContent = MONTH_NAMES[month - 1] + ' ' + year;
@@ -715,7 +720,7 @@
     document.getElementById('fCategory').value = expense.category;
     document.getElementById('fName').value = expense.name;
     document.getElementById('fValue').value = expense.value.toFixed(2);
-    document.getElementById('fDate').value = expense.date;
+    document.getElementById('fDate').value = expense.date.toISOString().slice(0, 10);
     document.getElementById('formTitle').textContent = 'Edit expense';
     document.getElementById('submitBtn').textContent = 'Save changes';
     document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -746,7 +751,7 @@
     const category = catSelect.value;
     let name = nameInput.value.trim();
     const rawValue = valueInput.value.trim();
-    const rawDate = dateInput.value.trim();
+    const rawDate = dateInput.value;
 
     if (!category) {
       errorEl.textContent = 'Choose a category first.';
@@ -767,7 +772,9 @@
 
     const value = parseFloat(rawValue);
     if (name === '') name = category;
-    const date = rawDate !== '' ? rawDate : new Date().toISOString().slice(0, 10);
+    const date = rawDate !== ''
+    ? new Date(rawDate + 'T00:00:00')
+    : new Date();
 
     if (editingId !== null) {
       const target = expenses.find(e => e.id === editingId);
@@ -788,10 +795,15 @@
     renderList();
   });
 
-  document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
-  renderStats();
-  renderFilterPills();
-  renderList();
+async function init() {
+    await loadExpenses();
+    document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+    renderStats();
+    renderFilterPills();
+    renderList();
+}
+
+init();
 </script>
 </body>
 </html>

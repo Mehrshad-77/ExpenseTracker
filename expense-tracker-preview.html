@@ -544,6 +544,12 @@ async function loadExpenses() {
     return /^\d{4}-\d{2}-\d{2}$/.test(str);
 }
 
+  function toLocalDateTimeString(date) {
+      const pad = n => String(n).padStart(2, '0');
+
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function computeTotals() {
@@ -638,7 +644,7 @@ async function loadExpenses() {
     });
   }
 
-  document.getElementById('list').addEventListener('click', (ev) => {
+  document.getElementById('list').addEventListener('click', async (ev) => {
     const editBtn = ev.target.closest('.row-edit');
     if (editBtn) {
       const expense = expenses.find(e => e.id === Number(editBtn.dataset.id));
@@ -652,6 +658,15 @@ async function loadExpenses() {
     const expense = expenses.find(e => e.id === id);
     if (!expense) return;
     if (!confirm('Delete "' + expense.name + '" (' + fmtMoney(expense.value) + ')? This can\'t be undone.')) return;
+    
+    const response = await fetch(`http://127.0.0.1:8000/expenses/${id}`, {
+    method: "DELETE"
+});
+
+if (!response.ok) {
+    alert("Failed to delete expense.");
+    return;
+}
     expenses = expenses.filter(e => e.id !== id);
     if (editingId === id) exitEditMode();
     renderStats();
@@ -720,7 +735,8 @@ async function loadExpenses() {
     document.getElementById('fCategory').value = expense.category;
     document.getElementById('fName').value = expense.name;
     document.getElementById('fValue').value = expense.value.toFixed(2);
-    document.getElementById('fDate').value = expense.date.toISOString().slice(0, 10);
+    document.getElementById('fDate').value =
+    toLocalDateTimeString(expense.date).slice(0, 10);
     document.getElementById('formTitle').textContent = 'Edit expense';
     document.getElementById('submitBtn').textContent = 'Save changes';
     document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -731,7 +747,8 @@ async function loadExpenses() {
   function exitEditMode() {
     editingId = null;
     document.getElementById('expenseForm').reset();
-    document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('fDate').value =
+    toLocalDateTimeString(new Date()).slice(0, 10);
     document.getElementById('formTitle').textContent = 'Add an expense';
     document.getElementById('submitBtn').textContent = 'Add expense';
     document.getElementById('cancelEditBtn').style.display = 'none';
@@ -740,7 +757,7 @@ async function loadExpenses() {
 
   document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
 
-  document.getElementById('expenseForm').addEventListener('submit', (ev) => {
+  document.getElementById('expenseForm').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const catSelect = document.getElementById('fCategory');
     const nameInput = document.getElementById('fName');
@@ -777,27 +794,82 @@ async function loadExpenses() {
     : new Date();
 
     if (editingId !== null) {
-      const target = expenses.find(e => e.id === editingId);
-      if (target) {
-        target.category = category;
-        target.name = name;
-        target.value = value;
-        target.date = date;
-      }
-      exitEditMode();
-    } else {
-      expenses.push({ id: nextId++, category, name, value, date });
-      ev.target.reset();
-      document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+    const response = await fetch(
+        `http://127.0.0.1:8000/expenses/${editingId}`,
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                category: category,
+                name: name,
+                value: value,
+                date: toLocalDateTimeString(date)
+            })
+        }
+    );
+
+    if (!response.ok) {
+        errorEl.textContent = "Failed to update expense.";
+        errorEl.style.display = "block";
+        return;
     }
 
+    const updatedExpense = await response.json();
+
+    const index = expenses.findIndex(e => e.id === editingId);
+
+    if (index !== -1) {
+        expenses[index] = {
+            ...updatedExpense,
+            value: Number(updatedExpense.value),
+            date: new Date(updatedExpense.date)
+        };
+    }
+
+    exitEditMode();
+} else {
+    const response = await fetch("http://127.0.0.1:8000/expenses", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            category: category,
+            name: name,
+            value: value,
+            date: toLocalDateTimeString(date)
+        })
+    });
+
+    if (!response.ok) {
+        errorEl.textContent = "Failed to add expense.";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    const createdExpense = await response.json();
+
+    expenses.push({
+        ...createdExpense,
+        value: Number(createdExpense.value),
+        date: new Date(createdExpense.date)
+    });
+
+    ev.target.reset();
+
+    document.getElementById('fDate').value =
+    toLocalDateTimeString(new Date()).slice(0, 10);
+}
     renderStats();
     renderList();
   });
 
 async function init() {
     await loadExpenses();
-    document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('fDate').value =
+    toLocalDateTimeString(new Date()).slice(0, 10);
     renderStats();
     renderFilterPills();
     renderList();

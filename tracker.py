@@ -90,26 +90,30 @@ class ExpenseTracker:
 
     def calculate_spending(self, month, year):
         expenses_sum = Decimal("0")
+        found = False
         for expense in self.expenses:
             if expense.date.month == month and expense.date.year == year:
                 expenses_sum += expense.value
-        return expenses_sum
+                found = True
+        return expenses_sum if found else None
 
     def get_expenses(self):
         return self.expenses.copy()
 
     def calculate_spending_category(self, category):
         expenses_sum = Decimal("0")
+        found = False
         for expense in self.expenses:
             if expense.category.lower().strip() == category.lower().strip():
                 expenses_sum += expense.value
-        return expenses_sum
+                found = True
+        return expenses_sum if found else None
 
     def edit_expense(self, expense_id, category=None, name=None, value=None, date=None):
         for expense in self.expenses:
             if expense.id == expense_id:
                 if category is None and name is None and value is None and date is None:
-                    return True
+                    return expense
                 if category is not None:
                     expense.category = category
                 if name is not None:
@@ -119,5 +123,5 @@ class ExpenseTracker:
                 if date is not None:
                     expense.date = date
                 self.save_to_csv()
-                return True
-        return False
+                return expense
+        return None

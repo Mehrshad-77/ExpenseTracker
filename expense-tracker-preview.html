@@ -360,6 +360,15 @@
   .row-edit:hover { background: var(--sky-soft); color: var(--sky-deep); }
   .row-delete:hover { background: var(--coral-soft); color: var(--coral-deep); }
 
+  .conn-error {
+    color: var(--coral-deep);
+    background: var(--coral-soft);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-weight: 700;
+    margin: 0 0 20px;
+  }
+
   .empty-state {
     display: none;
     padding: 44px 20px;
@@ -380,6 +389,8 @@
     <h1>Expense tracker</h1>
     <p>See where your money's going, one entry at a time.</p>
   </header>
+
+  <p class="conn-error" id="connError" style="display:none;">Can't reach the server. Make sure it's running, then reload the page.</p>
 
   <div class="stats">
     <div class="stat-card">
@@ -437,12 +448,6 @@
           <label for="fCategory">Category</label>
           <select id="fCategory" required>
             <option value="" disabled selected>Choose one</option>
-            <option>Food</option>
-            <option>Transport</option>
-            <option>Entertainment</option>
-            <option>Education</option>
-            <option>Bills</option>
-            <option>Other</option>
           </select>
         </div>
         <div class="field">
@@ -490,7 +495,14 @@
 </div>
 
 <script>
-  const CATS = ['Food', 'Transport', 'Entertainment', 'Education', 'Bills', 'Other'];
+  // Empty string = same origin as the page (this file is now served by FastAPI
+  // itself, so no cross-origin requests or CORS config are needed). If this
+  // page is ever opened a different way, set this to the API's full URL.
+  const API_BASE = '';
+
+  // Populated from GET /categories at startup so the category list has one
+  // source of truth (the backend's CATEGORIES) instead of being duplicated here.
+  let CATS = [];
 
   const CAT_COLORS = {
     Food:          { bg: 'var(--sun-soft)',    text: 'var(--sun-deep)' },
@@ -500,26 +512,55 @@
     Bills:         { bg: 'var(--surface-sunken)', text: 'var(--ink-muted)' },
     Other:         { bg: 'var(--surface-sunken)', text: 'var(--ink-subtle)' }
   };
+  const DEFAULT_CAT_COLOR = { bg: 'var(--surface-sunken)', text: 'var(--ink-subtle)' };
+  function colorFor(category) { return CAT_COLORS[category] || DEFAULT_CAT_COLOR; }
 
   let expenses = [];
-  let nextId = 9;
   let filterCat = 'All';
   let sortBy = 'date';
   let sortDir = 'desc';
 
 async function loadExpenses() {
-    const response = await fetch("http://127.0.0.1:8000/expenses");
+    const response = await fetch(`${API_BASE}/expenses`);
+    if (!response.ok) throw new Error('Failed to load expenses');
 
     const data = await response.json();
 
     expenses = data.map(e => ({
         ...e,
-        value: Number(e.value),
+        valueCents: centsFromDecimalStr(e.value),
         date: new Date(e.date)
     }));
 }
 
-  function fmtMoney(n) { return '$' + n.toFixed(2); }
+  // Money is kept as integer cents everywhere in JS to avoid float rounding
+  // errors when summing many values. The server sends/accepts exact decimal
+  // strings (e.g. "12.50"); we only ever divide by 100 at the final display
+  // step, never accumulate divided/float values.
+  function centsFromDecimalStr(s) {
+    const str = String(s).trim();
+    const negative = str.startsWith('-');
+    const unsigned = negative ? str.slice(1) : str;
+    const [whole, frac = ''] = unsigned.split('.');
+    const fracPadded = (frac + '00').slice(0, 2);
+    const cents = (parseInt(whole || '0', 10) * 100) + parseInt(fracPadded, 10);
+    return negative ? -cents : cents;
+  }
+
+  function fmtMoneyCents(cents) { return '$' + (cents / 100).toFixed(2); }
+
+  async function loadCategories() {
+    const response = await fetch(`${API_BASE}/categories`);
+    if (!response.ok) throw new Error('Failed to load categories');
+    CATS = await response.json();
+    const select = document.getElementById('fCategory');
+    CATS.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c;
+      option.textContent = c;
+      select.appendChild(option);
+    });
+  }
 
   function fmtDate(date) {
     const d = date instanceof Date ? date : new Date(date);
@@ -553,39 +594,39 @@ async function loadExpenses() {
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function computeTotals() {
-    let total = 0;
-    const byCat = {};
-    CATS.forEach(c => byCat[c] = 0);
-    expenses.forEach(e => { total += e.value; byCat[e.category] += e.value; });
-    return { total, byCat };
+    let totalCents = 0;
+    const byCatCents = {};
+    CATS.forEach(c => byCatCents[c] = 0);
+    expenses.forEach(e => { totalCents += e.valueCents; byCatCents[e.category] += e.valueCents; });
+    return { totalCents, byCatCents };
   }
 
   function renderMonthTotal() {
     const month = parseInt(document.getElementById('monthSelect').value, 10);
     const year = parseInt(document.getElementById('yearSelect').value, 10);
-    let total = 0;
+    let totalCents = 0;
     expenses.forEach(e => {
       const d = e.date instanceof Date ? e.date : new Date(e.date);
-      if (d.getMonth() + 1 === month && d.getFullYear() === year) total += e.value;
+      if (d.getMonth() + 1 === month && d.getFullYear() === year) totalCents += e.valueCents;
     });
     document.getElementById('monthLabel').textContent = MONTH_NAMES[month - 1] + ' ' + year;
-    document.getElementById('monthAmt').textContent = fmtMoney(total);
+    document.getElementById('monthAmt').textContent = fmtMoneyCents(totalCents);
   }
 
   function renderStats() {
-    const { total, byCat } = computeTotals();
-    document.getElementById('statTotal').textContent = fmtMoney(total);
+    const { totalCents, byCatCents } = computeTotals();
+    document.getElementById('statTotal').textContent = fmtMoneyCents(totalCents);
     document.getElementById('statCount').textContent = String(expenses.length);
 
     const breakdown = document.getElementById('breakdown');
     breakdown.innerHTML = '';
     CATS.forEach(c => {
-      if (byCat[c] <= 0) return;
+      if (byCatCents[c] <= 0) return;
       const chip = document.createElement('span');
       chip.className = 'cat-chip';
-      chip.style.background = CAT_COLORS[c].bg;
-      chip.style.color = CAT_COLORS[c].text;
-      chip.textContent = c + ' \u00b7 ' + fmtMoney(byCat[c]);
+      chip.style.background = colorFor(c).bg;
+      chip.style.color = colorFor(c).text;
+      chip.textContent = c + ' \u00b7 ' + fmtMoneyCents(byCatCents[c]);
       breakdown.appendChild(chip);
     });
 
@@ -614,7 +655,7 @@ async function loadExpenses() {
     list.sort((a, b) => {
       let r = 0;
       if (sortBy === 'date') r = a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
-      else if (sortBy === 'value') r = a.value - b.value;
+      else if (sortBy === 'value') r = a.valueCents - b.valueCents;
       else r = a.name.localeCompare(b.name);
       return sortDir === 'asc' ? r : -r;
     });
@@ -630,14 +671,14 @@ async function loadExpenses() {
     empty.style.display = 'none';
 
     list.forEach(e => {
-      const colors = CAT_COLORS[e.category];
+      const colors = colorFor(e.category);
       const row = document.createElement('div');
       row.className = 'row';
       row.innerHTML =
         '<span class="row-tag" style="background:' + colors.bg + ';color:' + colors.text + ';">' + e.category + '</span>' +
         '<span class="row-name">' + escapeHtml(e.name) + '</span>' +
         '<span class="row-date">' + fmtDate(e.date) + '</span>' +
-        '<span class="row-value">' + fmtMoney(e.value) + '</span>' +
+        '<span class="row-value">' + fmtMoneyCents(e.valueCents) + '</span>' +
         '<button class="row-edit" aria-label="Edit ' + escapeHtml(e.name) + '" data-id="' + e.id + '">\u270e</button>' +
         '<button class="row-delete" aria-label="Delete ' + escapeHtml(e.name) + '" data-id="' + e.id + '">\u00d7</button>';
       container.appendChild(row);
@@ -657,16 +698,20 @@ async function loadExpenses() {
     const id = Number(delBtn.dataset.id);
     const expense = expenses.find(e => e.id === id);
     if (!expense) return;
-    if (!confirm('Delete "' + expense.name + '" (' + fmtMoney(expense.value) + ')? This can\'t be undone.')) return;
+    if (!confirm('Delete "' + expense.name + '" (' + fmtMoneyCents(expense.valueCents) + ')? This can\'t be undone.')) return;
     
-    const response = await fetch(`http://127.0.0.1:8000/expenses/${id}`, {
-    method: "DELETE"
-});
+    let response;
+    try {
+        response = await fetch(`${API_BASE}/expenses/${id}`, { method: "DELETE" });
+    } catch (err) {
+        alert("Can't reach the server. Check your connection and try again.");
+        return;
+    }
 
-if (!response.ok) {
-    alert("Failed to delete expense.");
-    return;
-}
+    if (!response.ok) {
+        alert("Failed to delete expense.");
+        return;
+    }
     expenses = expenses.filter(e => e.id !== id);
     if (editingId === id) exitEditMode();
     renderStats();
@@ -729,12 +774,14 @@ if (!response.ok) {
   wireStepper('stepDown', -AMOUNT_STEP);
 
   let editingId = null;
+  let editingOriginalDate = null;
 
   function enterEditMode(expense) {
     editingId = expense.id;
+    editingOriginalDate = expense.date;
     document.getElementById('fCategory').value = expense.category;
     document.getElementById('fName').value = expense.name;
-    document.getElementById('fValue').value = expense.value.toFixed(2);
+    document.getElementById('fValue').value = (expense.valueCents / 100).toFixed(2);
     document.getElementById('fDate').value =
     toLocalDateTimeString(expense.date).slice(0, 10);
     document.getElementById('formTitle').textContent = 'Edit expense';
@@ -746,6 +793,7 @@ if (!response.ok) {
 
   function exitEditMode() {
     editingId = null;
+    editingOriginalDate = null;
     document.getElementById('expenseForm').reset();
     document.getElementById('fDate').value =
     toLocalDateTimeString(new Date()).slice(0, 10);
@@ -787,28 +835,44 @@ if (!response.ok) {
     }
     errorEl.style.display = 'none';
 
-    const value = parseFloat(rawValue);
     if (name === '') name = category;
-    const date = rawDate !== ''
-    ? new Date(rawDate + 'T00:00:00')
-    : new Date();
+    let date;
+    if (rawDate !== '' && editingId !== null && editingOriginalDate) {
+      // Editing: keep the original time-of-day so same-day sort order
+      // (which relies on stored time) doesn't get disturbed just because
+      // the date field displays date-only.
+      const [y, m, d] = rawDate.split('-').map(Number);
+      date = new Date(editingOriginalDate);
+      date.setFullYear(y, m - 1, d);
+    } else if (rawDate !== '') {
+      date = new Date(rawDate + 'T00:00:00');
+    } else {
+      date = new Date();
+    }
 
     if (editingId !== null) {
-    const response = await fetch(
-        `http://127.0.0.1:8000/expenses/${editingId}`,
-        {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                category: category,
-                name: name,
-                value: value,
-                date: toLocalDateTimeString(date)
-            })
-        }
-    );
+    let response;
+    try {
+        response = await fetch(
+            `${API_BASE}/expenses/${editingId}`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    category: category,
+                    name: name,
+                    value: rawValue,
+                    date: toLocalDateTimeString(date)
+                })
+            }
+        );
+    } catch (err) {
+        errorEl.textContent = "Can't reach the server. Check your connection and try again.";
+        errorEl.style.display = "block";
+        return;
+    }
 
     if (!response.ok) {
         errorEl.textContent = "Failed to update expense.";
@@ -823,25 +887,32 @@ if (!response.ok) {
     if (index !== -1) {
         expenses[index] = {
             ...updatedExpense,
-            value: Number(updatedExpense.value),
+            valueCents: centsFromDecimalStr(updatedExpense.value),
             date: new Date(updatedExpense.date)
         };
     }
 
     exitEditMode();
 } else {
-    const response = await fetch("http://127.0.0.1:8000/expenses", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            category: category,
-            name: name,
-            value: value,
-            date: toLocalDateTimeString(date)
-        })
-    });
+    let response;
+    try {
+        response = await fetch(`${API_BASE}/expenses`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                category: category,
+                name: name,
+                value: rawValue,
+                date: toLocalDateTimeString(date)
+            })
+        });
+    } catch (err) {
+        errorEl.textContent = "Can't reach the server. Check your connection and try again.";
+        errorEl.style.display = "block";
+        return;
+    }
 
     if (!response.ok) {
         errorEl.textContent = "Failed to add expense.";
@@ -853,7 +924,7 @@ if (!response.ok) {
 
     expenses.push({
         ...createdExpense,
-        value: Number(createdExpense.value),
+        valueCents: centsFromDecimalStr(createdExpense.value),
         date: new Date(createdExpense.date)
     });
 
@@ -867,7 +938,14 @@ if (!response.ok) {
   });
 
 async function init() {
-    await loadExpenses();
+    try {
+        await loadCategories();
+        await loadExpenses();
+    } catch (err) {
+        document.getElementById('connError').style.display = 'block';
+        return;
+    }
+    document.getElementById('connError').style.display = 'none';
     document.getElementById('fDate').value =
     toLocalDateTimeString(new Date()).slice(0, 10);
     renderStats();

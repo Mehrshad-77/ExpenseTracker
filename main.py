@@ -182,7 +182,11 @@ def menu():
                             print("Invalid input. Please Enter a legit year")
                             continue
 
-                    print(f"{months[str(month)]} {str(year)} total spending: {et.calculate_spending(month, year):.2f}$")
+                    spending = et.calculate_spending(month, year)
+                    if spending is None:
+                        print(f"No expenses found for {months[str(month)]} {year}.")
+                    else:
+                        print(f"{months[str(month)]} {str(year)} total spending: {spending:.2f}$")
                     break
                 elif filter_by == "C":
                     while True:
@@ -195,7 +199,11 @@ def menu():
                             continue
 
                         else:
-                            print(f"Money spent on {categories[category]}: {et.calculate_spending_category(categories[category]):.2f}$")
+                            spending = et.calculate_spending_category(categories[category])
+                            if spending is None:
+                                print(f"No expenses found for {categories[category]}.")
+                            else:
+                                print(f"Money spent on {categories[category]}: {spending:.2f}$")
                             break
                 elif filter_by == "B":
                     break

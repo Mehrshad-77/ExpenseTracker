@@ -71,7 +71,7 @@ def test_edit_expense_updates_only_given_fields(tracker):
 
 
 def test_edit_expense_not_found(tracker):
-    assert tracker.edit_expense(999, name="X") is False
+    assert tracker.edit_expense(999, name="X") is None
 
 
 def test_edit_expense_keeps_id_stable(tracker):
@@ -92,6 +92,16 @@ def test_calculate_spending_category_case_and_whitespace_insensitive(tracker):
     tracker.add_expense("Food", "Lunch", "10.00")
     tracker.add_expense("Bills", "Rent", "500.00")
     assert tracker.calculate_spending_category(" food ") == Decimal("10.00")
+
+
+def test_calculate_spending_returns_none_when_no_match(tracker):
+    tracker.add_expense("Food", "Lunch", "10.00", date=__import__("datetime").datetime(2026, 1, 1))
+    assert tracker.calculate_spending(6, 2020) is None
+
+
+def test_calculate_spending_category_returns_none_when_no_match(tracker):
+    tracker.add_expense("Food", "Lunch", "10.00")
+    assert tracker.calculate_spending_category("Transport") is None
 
 
 # --- Decimal precision (regression test for the float -> Decimal fix) ---
